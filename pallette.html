@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.rawgit.com/konvajs/konva/1.6.5/konva.min.js"></script>
+    <p>Drag a red circle from the pallette and drop it on the grey canvas.
+    </p>
+    <div id='pallette'></div>
+    <div id='container1'></div>
+    <style>
+        p {
+            padding: 4px;
+
+        }
+
+        #container1 {
+            display: inline-block;
+            width: 500px;
+            height: 200px;
+            background-color: silver;
+            overflow: hidden;
+        }
+
+        #pallette {
+            height: 52px;
+            width: 500px;
+            border: 1px solid #666;
+            margin-bottom: 10px;
+            z-index: 10;
+        }
+
+        .draggable {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+            border: 1px solid #666;
+        }
+
+    </style>
+</head>
+<body>
+<script>
+
+    // Set up the canvas to catch the dragged shapes
+    var s1 = new Konva.Stage({container: 'container1', width: 500, height: 200});
+    // add a layer to host the 'dropped' shapes.
+    var layer1 = new Konva.Layer({draggable: false});
+    s1.add(layer1);
+
+    // set up the palette of draggable shapes - 5 sample shapes.
+    var palletteEle = $('#pallette');
+    var d, ps, l, c;
+    for (var i = 0; i<5; i = i + 1){
+        // make a div to hold the shape
+        d = $('<div id="shape' + i + '" class="draggable">Shape</div>')
+        palletteEle.append(d)
+
+        // make a mini stage to hold the shape
+        ps = new Konva.Stage({container: 'shape' + i, width: 50, height: 50});
+
+        // make a layer to hold the shape
+        l = new Konva.Layer();
+
+        // add layer to palette
+        ps.add(l);
+
+        // make a shape - red circles for example
+        c = new Konva.Circle({x: 24, y: 24, radius: 22, fill: 'red', stroke: 'black'})
+        l.add(c);
+        ps.draw();
+    }
+
+    // make a crosshair to give some idea of the drop location
+    var cross = new Konva.Line({points: [10, 0, 10, 20, 10, 10, 0, 10, 20, 10],
+        stroke: 'gold',
+        strokeWidth: 1,
+        lineCap: 'round',
+        lineJoin: 'round'})
+    layer1.add(cross);
+    //s1.draw();
+
+    // make the main stage a drop target
+    $('#container1').addClass('droppable');
+
+    // function to move the cross hairs
+    function moveCross(x, y){
+        cross.x(x);
+        y = y - $('#container1').offset().top;
+        cross.y(y < 0 ? 0 : y);
+        s1.draw();
+    }
+
+
+    // draggable setup. Movecross used to move the crosshairs. More work needed but shows the way.
+    $( ".draggable" ).draggable({
+        zIndex: 100,
+        helper: "clone",
+        opacity: 0.35,
+        drag: function( event, ui ) {moveCross(ui.offset.left  , ui.offset.top + $(this).offset().top)}
+    });
+
+    // set up the droppable
+    $( ".droppable" ).droppable({
+        drop: function( event, ui ) {
+            dropShape(ui.position.left, ui.position.top)
+        }
+    });
+
+    //  Function to create a new shape when we drop something dragged from the palette
+    function dropShape() {
+        var c1 = new Konva.Circle({x: cross.x(), y: cross.y(), radius: 22, fill: 'red', stroke: 'black'});
+        layer1.add(c1);
+        cross.x(0); cross.y(0);
+        cross.moveToTop(); // move the cross to the top to stop going bahind previously dropped shapes.
+        s1.draw();
+    }
+
+</script>
+</body>
+</html>

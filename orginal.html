@@ -1,0 +1,258 @@
+<script src="https://cdn.rawgit.com/konvajs/konva/2.4.1/konva.min.js"></script>
+<div id="container"></div>
+<script>
+    var stage = new Konva.Stage({
+        container: 'container',
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+
+
+    window.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    console.log('WINDOW size=' + width + ', y=' + height)
+    var stage = new Konva.Stage({
+        container: 'container',
+        width: width,
+        height: height
+    });
+
+    var layer = new Konva.Layer();
+
+    // bound below y=50
+    var blueGroup = new Konva.Group({
+        x: 30,
+        y: 70,
+        draggable: true,
+        dragBoundFunc: function (pos) {
+            var newY = pos.y;
+            var newX = pos.x;
+
+            if (pos.y > window.innerHeight - 100) {
+                newY = window.innerHeight - 100;
+            } else if (pos.y < 20) {
+                newY = 20;
+            }
+
+            if (pos.x > window.innerWidth - 150) {
+                newX = window.innerWidth - 150;
+            } else if (pos.x < 20) {
+                newX = 20;
+            }
+
+            console.log('MOVE x=' + pos.x + ', y=' + pos.y)
+            return {
+                x: newX,
+                y: newY
+            };
+        }
+    });
+
+
+    var redGroup = new Konva.Group({
+        x: 100,
+        y: 200,
+        draggable: true,
+        dragBoundFunc: function (pos) {
+            var newY = pos.y;
+            var newX = pos.x;
+
+            if (pos.y > window.innerHeight - 100) {
+                newY = window.innerHeight - 100;
+            } else if (pos.y < 20) {
+                newY = 20;
+            }
+
+            if (pos.x > window.innerWidth - 150) {
+                newX = window.innerWidth - 150;
+            } else if (pos.x < 20) {
+                newX = 20;
+            }
+
+            console.log('MOVE x=' + pos.x + ', y=' + pos.y)
+            return {
+                x: newX,
+                y: newY
+            };
+        }
+    });
+
+    // bound inside a circle
+    var yellowGroup = new Konva.Group({
+        x: stage.getWidth() / 2,
+        y: 70,
+        draggable: true,
+        dragBoundFunc: function (pos) {
+            var x = stage.getWidth() / 2;
+            var y = 70;
+            var radius = 50;
+            var scale = radius / Math.sqrt(Math.pow(pos.x - x, 2) + Math.pow(pos.y - y, 2));
+            if (scale < 1)
+                return {
+                    y: Math.round((pos.y - y) * scale + y),
+                    x: Math.round((pos.x - x) * scale + x)
+                };
+            else
+                return pos;
+        }
+    });
+
+
+
+    var originalPoint = {x: blueGroup.getX(), y: blueGroup.getY()}; // save original box coordinates
+
+  /*  var line = new Konva.Line({
+        points: [originalPoint.x, originalPoint.y],
+        stroke: 'red',
+        strokeWidth: 5,
+        lineCap: 'round',
+        lineJoin: 'round'
+    });
+*/
+
+    var line = new Konva.Line({
+        points: [blueGroup.getX()+blueGroup.getWidth()/2, blueGroup.getY()+blueGroup.getHeight()/2 , redGroup.getX()+yellowGroup.getWidth()/2, redGroup.getY()+redGroup.getHeight()/2],
+        stroke: 'black',
+        strokeWidth: 2,
+        lineCap: 'round',
+        lineJoin: 'round'
+    });
+
+    var blueText = new Konva.Text({
+        fontSize: 26,
+        fontFamily: 'Calibri',
+        text: 'Scene 1',
+        fill: 'black',
+        padding: 10
+    });
+
+    var redText = new Konva.Text({
+        fontSize: 26,
+        fontFamily: 'Calibri',
+        text: 'Scene 2',
+        fill: 'black',
+        padding: 10
+    });
+
+    var blueRect = new Konva.Rect({
+        width: blueText.getWidth(),
+        height: blueText.getHeight(),
+        fill: '#aaf',
+        stroke: 'black',
+        strokeWidth: 2
+    });
+
+    var redRect = new Konva.Rect({
+        width: blueText.getWidth(),
+        height: blueText.getHeight(),
+        fill: '#aaf',
+        stroke: 'black',
+        strokeWidth: 2
+    });
+
+    var yellowText = new Konva.Text({
+        fontSize: 26,
+        fontFamily: 'Calibri',
+        text: 'bound in circle',
+        fill: 'black',
+        padding: 10
+    });
+
+    var yellowRect = new Konva.Rect({
+        width: yellowText.getWidth(),
+        height: yellowText.getHeight(),
+        fill: 'yellow',
+        stroke: 'black',
+        strokeWidth: 2
+    });
+
+
+    var arrow = new Konva.Arrow({
+        points: [blueGroup.getX(), blueGroup.getY(), redGroup.getX(), redGroup.getY()],
+        pointerLength: 10,
+        pointerWidth: 10,
+        fill: 'black',
+        stroke: 'black',
+        strokeWidth: 4
+    });
+
+
+
+    redGroup.add(redRect).add(redText);
+
+    blueGroup.add(blueRect).add(blueText);
+    redGroup.add(redRect).remove(blueText)
+
+
+    layer.add(blueGroup);
+    layer.add(redGroup);
+    layer.add(arrow);
+
+    // add the layer to the stage
+    stage.add(layer);
+
+
+    addMenus(blueGroup);
+    addMenus(yellowGroup);
+    addMenus(redGroup);
+    //addMenus(arrow);
+
+    blueGroup.on('dragstart dragmove', function(){
+        console.log('drag blue')
+        update();
+    });
+
+    redGroup.on('dragstart dragmove', function(){
+        console.log('drag red')
+        update();
+    });
+
+    function addMenus(boxed) {
+        boxed.on('mouseover', function () {
+            document.body.style.cursor = 'pointer';
+        });
+        boxed.on('mouseout', function () {
+            document.body.style.cursor = 'default';
+        });
+
+        boxed.on('contextmenu', function (e) {
+            boxed.destroy();
+            layer.draw();
+        });
+    }
+
+
+
+
+    function update(){
+
+        console.log('blueRect.getWidth()='+blueRect.getWidth())
+        //line.setPoints([((blueGroup.getX()+50)+blueRect.getWidth()/2), blueGroup.getY()+blueRect.getHeight()/2 , (redGroup.getX()-50)+blueRect.getWidth()/2, redGroup.getY()+blueRect.getHeight()/2]);
+
+        // scene 1 below (x is always offset!!)
+
+            if (blueGroup.getY() > redGroup.getY()){
+
+                var p=[blueGroup.getX()+50, blueGroup.getY(), redGroup.getX()+50, redGroup.getY()+50];
+                arrow.setPoints(p);
+                layer.draw();
+
+            }else{
+                 // secne 2 is above
+                var p=[blueGroup.getX()+50, blueGroup.getY()+45, redGroup.getX()+50, redGroup.getY()];
+                arrow.setPoints(p);
+                layer.draw();
+            }
+
+
+
+
+    }
+
+</script>
